@@ -1,4 +1,4 @@
-#ifndef Py_LIMITED_API
+﻿#ifndef Py_LIMITED_API
 #ifndef Py_LONGINTREPR_H
 #define Py_LONGINTREPR_H
 #ifdef __cplusplus
@@ -13,8 +13,10 @@ extern "C" {
    integer type, and one set for 15-bit digits with each digit stored in an
    unsigned short.  The value of PYLONG_BITS_IN_DIGIT, defined either at
    configure time or in pyport.h, is used to decide which digit size to use.
+   有两种表示一种是无符号30位整数，一种是15位的数字集合，每个数字存放在unsigned short中
+   PYLONG_BITS_IN_DIGIT 决定使用那一种
 
-   Type 'digit' should be able to hold 2*PyLong_BASE-1, and type 'twodigits'
+   Type 'digit' should be able to hold 2*PyLong_BASE-1, and type 'twodigits'   digit类型可以容纳2*PyLong_BASE-1的数
    should be an unsigned integer type able to hold all integers up to
    PyLong_BASE*PyLong_BASE-1.  x_sub assumes that 'digit' is an unsigned type,
    and that overflow is handled by taking the result modulo 2**N for some N >

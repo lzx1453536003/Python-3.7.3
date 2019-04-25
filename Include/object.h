@@ -1,4 +1,4 @@
-#ifndef Py_OBJECT_H
+﻿#ifndef Py_OBJECT_H
 #define Py_OBJECT_H
 #ifdef __cplusplus
 extern "C" {
@@ -111,7 +111,7 @@ typedef struct _object {
 
 typedef struct {
     PyObject ob_base;
-    Py_ssize_t ob_size; /* Number of items in variable part */
+    Py_ssize_t ob_size; /* Number of items in variable part */ //元素的个数 同时又“-” “+” "0"  LongObject
 } PyVarObject;
 
 #define Py_REFCNT(ob)           (((PyObject*)(ob))->ob_refcnt)

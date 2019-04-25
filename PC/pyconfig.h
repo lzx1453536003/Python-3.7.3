@@ -1,4 +1,4 @@
-#ifndef Py_CONFIG_H
+﻿#ifndef Py_CONFIG_H
 #define Py_CONFIG_H
 
 /* pyconfig.h.  NOT Generated automatically by configure.
@@ -188,8 +188,8 @@ typedef int pid_t;
 
 #include <float.h>
 #define Py_IS_NAN _isnan
-#define Py_IS_INFINITY(X) (!_finite(X) && !_isnan(X))
-#define Py_IS_FINITE(X) _finite(X)
+#define Py_IS_INFINITY(X) (!_finite(X) && !_isnan(X)) //无穷的
+#define Py_IS_FINITE(X) _finite(X)	//有限的
 #define copysign _copysign
 
 /* Side by Side assemblies supported in VS 2005 and VS 2008 but not 2010*/

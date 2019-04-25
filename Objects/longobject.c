@@ -1,4 +1,4 @@
-/* Long (arbitrary precision) integer object implementation */
+﻿/* Long (arbitrary precision) integer object implementation */
 
 /* XXX The functional organization of this file is terrible */
 
@@ -34,13 +34,14 @@ _Py_IDENTIFIER(big);
 PyObject *_PyLong_Zero = NULL;
 PyObject *_PyLong_One = NULL;
 
+#pragma region 小对象池
 #if NSMALLNEGINTS + NSMALLPOSINTS > 0
 /* Small integers are preallocated in this array so that they
    can be shared.
    The integers that are preallocated are those in the range
    -NSMALLNEGINTS (inclusive) to NSMALLPOSINTS (not inclusive).
 */
-static PyLongObject small_ints[NSMALLNEGINTS + NSMALLPOSINTS];
+static PyLongObject small_ints[NSMALLNEGINTS + NSMALLPOSINTS]; //小整数对象池，
 #ifdef COUNT_ALLOCS
 Py_ssize_t quick_int_allocs, quick_neg_int_allocs;
 #endif
@@ -48,17 +49,17 @@ Py_ssize_t quick_int_allocs, quick_neg_int_allocs;
 static PyObject *
 get_small_int(sdigit ival)
 {
-    PyObject *v;
-    assert(-NSMALLNEGINTS <= ival && ival < NSMALLPOSINTS);
-    v = (PyObject *)&small_ints[ival + NSMALLNEGINTS];
-    Py_INCREF(v);
+	PyObject *v;
+	assert(-NSMALLNEGINTS <= ival && ival < NSMALLPOSINTS);
+	v = (PyObject *)&small_ints[ival + NSMALLNEGINTS];
+	Py_INCREF(v);
 #ifdef COUNT_ALLOCS
-    if (ival >= 0)
-        quick_int_allocs++;
-    else
-        quick_neg_int_allocs++;
+	if (ival >= 0)
+		quick_int_allocs++;
+	else
+		quick_neg_int_allocs++;
 #endif
-    return v;
+	return v;
 }
 #define CHECK_SMALL_INT(ival) \
     do if (-NSMALLNEGINTS <= ival && ival < NSMALLPOSINTS) { \
@@ -68,19 +69,21 @@ get_small_int(sdigit ival)
 static PyLongObject *
 maybe_small_long(PyLongObject *v)
 {
-    if (v && Py_ABS(Py_SIZE(v)) <= 1) {
-        sdigit ival = MEDIUM_VALUE(v);
-        if (-NSMALLNEGINTS <= ival && ival < NSMALLPOSINTS) {
-            Py_DECREF(v);
-            return (PyLongObject *)get_small_int(ival);
-        }
-    }
-    return v;
+	if (v && Py_ABS(Py_SIZE(v)) <= 1) {
+		sdigit ival = MEDIUM_VALUE(v);
+		if (-NSMALLNEGINTS <= ival && ival < NSMALLPOSINTS) {
+			Py_DECREF(v);
+			return (PyLongObject *)get_small_int(ival);
+		}
+	}
+	return v;
 }
 #else
 #define CHECK_SMALL_INT(ival)
 #define maybe_small_long(val) (val)
 #endif
+
+#pragma endregion
 
 /* If a freshly-allocated int is already shared, it must
    be a small integer, so negating it must go to PyLong_FromLong */
@@ -134,7 +137,7 @@ long_normalize(PyLongObject *v)
         Py_SIZE(v) = (Py_SIZE(v) < 0) ? -(i) : i;
     return v;
 }
-
+#pragma region From As
 /* _PyLong_FromNbInt: Convert the given object to a PyLongObject
    using the nb_int slot, if available.  Raise TypeError if either the
    nb_int slot is not available or the result of the call to nb_int
@@ -187,10 +190,15 @@ _PyLong_FromNbInt(PyObject *integral)
 
 /* Allocate a new int object with size digits.
    Return NULL and set exception if we run out of memory. */
-
+/*
+	PyLongType的digit的最大数量
+*/
 #define MAX_LONG_DIGITS \
     ((PY_SSIZE_T_MAX - offsetof(PyLongObject, ob_digit))/sizeof(digit))
 
+/*
+	创建PyLongObject
+*/
 PyLongObject *
 _PyLong_New(Py_ssize_t size)
 {
@@ -214,6 +222,9 @@ _PyLong_New(Py_ssize_t size)
     return (PyLongObject*)PyObject_INIT_VAR(result, &PyLong_Type, size);
 }
 
+/*
+	copy一个PyLongObject
+*/
 PyObject *
 _PyLong_Copy(PyLongObject *src)
 {
@@ -237,23 +248,25 @@ _PyLong_Copy(PyLongObject *src)
     return (PyObject *)result;
 }
 
+
 /* Create a new int object from a C long int */
 
 PyObject *
 PyLong_FromLong(long ival)
 {
     PyLongObject *v;
-    unsigned long abs_ival;
+    unsigned long abs_ival; //绝对值
     unsigned long t;  /* unsigned so >> doesn't propagate sign bit */
-    int ndigits = 0;
-    int sign;
+    int ndigits = 0; //digits的个数，数组大小
+    int sign;//符号位置 -1 0 1 负数 0 正数
 
-    CHECK_SMALL_INT(ival);
+    CHECK_SMALL_INT(ival); //检测是否是小整数，是的话则直接缓存池里拿
 
+	//设置大小和符号
     if (ival < 0) {
         /* negate: can't write this as abs_ival = -ival since that
            invokes undefined behaviour when ival is LONG_MIN */
-        abs_ival = 0U-(unsigned long)ival;
+        abs_ival = 0U-(unsigned long)ival; //这里必须使用0减，否则会溢出
         sign = -1;
     }
     else {
@@ -261,25 +274,28 @@ PyLong_FromLong(long ival)
         sign = ival == 0 ? 0 : 1;
     }
 
+	//如果一个digit能够放下的情况
     /* Fast path for single-digit ints */
     if (!(abs_ival >> PyLong_SHIFT)) {
         v = _PyLong_New(1);
         if (v) {
             Py_SIZE(v) = sign;
             v->ob_digit[0] = Py_SAFE_DOWNCAST(
-                abs_ival, unsigned long, digit);
+                abs_ival, unsigned long, digit); //赋值操作，进行了类型转换的截断操作
         }
         return (PyObject*)v;
     }
-
+	//如果是是15位表示的两个digit
 #if PyLong_SHIFT==15
     /* 2 digits */
     if (!(abs_ival >> 2*PyLong_SHIFT)) {
         v = _PyLong_New(2);
         if (v) {
             Py_SIZE(v) = 2*sign;
+			//低位，高位被与运算变为0，截断
             v->ob_digit[0] = Py_SAFE_DOWNCAST(
                 abs_ival & PyLong_MASK, unsigned long, digit);
+			//高位，低位被右移，
             v->ob_digit[1] = Py_SAFE_DOWNCAST(
                   abs_ival >> PyLong_SHIFT, unsigned long, digit);
         }
@@ -287,18 +303,19 @@ PyLong_FromLong(long ival)
     }
 #endif
 
+	//大整数。超出一个digit的表示范围
     /* Larger numbers: loop to determine number of digits */
     t = abs_ival;
     while (t) {
-        ++ndigits;
+        ++ndigits; //求出需要几个digit能够表示这个数
         t >>= PyLong_SHIFT;
     }
     v = _PyLong_New(ndigits);
     if (v != NULL) {
         digit *p = v->ob_digit;
-        Py_SIZE(v) = ndigits*sign;
+        Py_SIZE(v) = ndigits*sign; //赋值个数与符号
         t = abs_ival;
-        while (t) {
+        while (t) { //赋值操作
             *p++ = Py_SAFE_DOWNCAST(
                 t & PyLong_MASK, unsigned long, digit);
             t >>= PyLong_SHIFT;
@@ -728,6 +745,9 @@ static const unsigned char BitLengthTable[32] = {
     5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5
 };
 
+/*
+	求出d所占的位数
+*/
 static int
 bits_in_digit(digit d)
 {
@@ -740,6 +760,9 @@ bits_in_digit(digit d)
     return d_bits;
 }
 
+/*
+	求PyLongObject得digit 数据部分占的位数
+*/
 size_t
 _PyLong_NumBits(PyObject *vv)
 {
@@ -770,6 +793,12 @@ _PyLong_NumBits(PyObject *vv)
     return (size_t)-1;
 }
 
+/*
+	args:
+		bytes 字节数组的起始地址
+		n 数组的大小
+		little_endian 是否是小端  或者是大端
+*/
 PyObject *
 _PyLong_FromByteArray(const unsigned char* bytes, size_t n,
                       int little_endian, int is_signed)
@@ -1438,6 +1467,8 @@ PyLong_AsLongLongAndOverflow(PyObject *vv, int *overflow)
     }
     return res;
 }
+#pragma endregion
+
 
 #define CHECK_BINOP(v,w)                                \
     do {                                                \
@@ -5378,16 +5409,18 @@ static PyNumberMethods long_as_number = {
 
 PyTypeObject PyLong_Type = {
     PyVarObject_HEAD_INIT(&PyType_Type, 0)
-    "int",                                      /* tp_name */
+    
+	"int",                                      /* tp_name */
     offsetof(PyLongObject, ob_digit),           /* tp_basicsize */
     sizeof(digit),                              /* tp_itemsize */
+
     long_dealloc,                               /* tp_dealloc */
     0,                                          /* tp_print */
     0,                                          /* tp_getattr */
     0,                                          /* tp_setattr */
     0,                                          /* tp_reserved */
     long_to_decimal_string,                     /* tp_repr */
-    &long_as_number,                            /* tp_as_number */
+    &long_as_number,                            /* tp_as_number number的操作*/
     0,                                          /* tp_as_sequence */
     0,                                          /* tp_as_mapping */
     (hashfunc)long_hash,                        /* tp_hash */
@@ -5464,7 +5497,7 @@ _PyLong_Init(void)
 {
 #if NSMALLNEGINTS + NSMALLPOSINTS > 0
     int ival, size;
-    PyLongObject *v = small_ints;
+    PyLongObject *v = small_ints; //初始化小整数资源池
 
     for (ival = -NSMALLNEGINTS; ival <  NSMALLPOSINTS; ival++, v++) {
         size = (ival < 0) ? -1 : ((ival == 0) ? 0 : 1);
