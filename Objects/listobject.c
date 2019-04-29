@@ -1,4 +1,4 @@
-/* List object implementation */
+﻿/* List object implementation */
 
 #include "Python.h"
 #include "internal/pystate.h"
@@ -30,6 +30,9 @@ class list "PyListObject *" "&PyList_Type"
  * Note that self->ob_item may change, and even if newsize is less
  * than ob_size on entry.
  */
+/*
+	重新计算大小
+*/
 static int
 list_resize(PyListObject *self, Py_ssize_t newsize)
 {
@@ -266,7 +269,9 @@ ins1(PyListObject *self, Py_ssize_t where, PyObject *v)
     items[where] = v;
     return 0;
 }
-
+/*
+	插入
+*/
 int
 PyList_Insert(PyObject *op, Py_ssize_t where, PyObject *newitem)
 {
@@ -296,7 +301,9 @@ app1(PyListObject *self, PyObject *v)
     PyList_SET_ITEM(self, n, v);
     return 0;
 }
-
+/*
+	追加
+*/
 int
 PyList_Append(PyObject *op, PyObject *newitem)
 {
@@ -452,6 +459,9 @@ list_slice(PyListObject *a, Py_ssize_t ilow, Py_ssize_t ihigh)
     return (PyObject *)np;
 }
 
+/*
+	得到切片列表
+*/
 PyObject *
 PyList_GetSlice(PyObject *a, Py_ssize_t ilow, Py_ssize_t ihigh)
 {
@@ -462,7 +472,10 @@ PyList_GetSlice(PyObject *a, Py_ssize_t ilow, Py_ssize_t ihigh)
     return list_slice((PyListObject *)a, ilow, ihigh);
 }
 
-static PyObject *
+/*
+	连接两个链表
+*/
+static PyObject * 
 list_concat(PyListObject *a, PyObject *bb)
 {
     Py_ssize_t size;
@@ -501,6 +514,9 @@ list_concat(PyListObject *a, PyObject *bb)
 #undef b
 }
 
+/*
+	重复链表n次
+*/
 static PyObject *
 list_repeat(PyListObject *a, Py_ssize_t n)
 {
@@ -570,10 +586,14 @@ _list_clear(PyListObject *a)
  * Special speed gimmick:  when v is NULL and ihigh - ilow <= 8, it's
  * guaranteed the call cannot fail.
  */
+/*
+	
+*/
 static int
 list_ass_slice(PyListObject *a, Py_ssize_t ilow, Py_ssize_t ihigh, PyObject *v)
 {
-    /* Because [X]DECREF can recursively invoke list operations on
+    /* Because [X]DECREF can recursively 
+	list operations on
        this list, we must postpone all [X]DECREF activity until
        after the list is back in its canonical shape.  Therefore
        we must allocate an additional array, 'recycle', into which
@@ -686,6 +706,9 @@ PyList_SetSlice(PyObject *a, Py_ssize_t ilow, Py_ssize_t ihigh, PyObject *v)
     return list_ass_slice((PyListObject *)a, ilow, ihigh, v);
 }
 
+/*
+	在原self中进行重复n次
+*/
 static PyObject *
 list_inplace_repeat(PyListObject *self, Py_ssize_t n)
 {
@@ -813,6 +836,9 @@ list.extend
 Extend list by appending elements from the iterable.
 [clinic start generated code]*/
 
+/*
+	将可迭代对象扩展到self后面
+*/
 static PyObject *
 list_extend(PyListObject *self, PyObject *iterable)
 /*[clinic end generated code: output=630fb3bca0c8e789 input=9ec5ba3a81be3a4d]*/

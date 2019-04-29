@@ -30,13 +30,13 @@ typedef struct {
      * Invariants:
      *     0 <= ob_size <= allocated
      *     len(list) == ob_size
-     *     ob_item == NULL implies ob_size == allocated == 0
+     *     ob_item == NULL implies(意味着) ob_size == allocated == 0
      * list.sort() temporarily sets allocated to -1 to detect mutations.
      *
      * Items must normally not be NULL, except during construction when
      * the list is not yet visible outside the function that builds it.
      */
-    Py_ssize_t allocated;
+    Py_ssize_t allocated; //当前列表可以容纳的 元素个数
 } PyListObject;
 #endif
 
