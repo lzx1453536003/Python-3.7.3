@@ -1,4 +1,4 @@
-/*
+﻿/*
 
 Unicode implementation based on original code by Fredrik Lundh,
 modified by Marc-Andre Lemburg <mal@lemburg.com>.

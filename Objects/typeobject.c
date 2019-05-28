@@ -1,4 +1,4 @@
-/* Type object implementation */
+﻿/* Type object implementation */
 
 #include "Python.h"
 #include "internal/pystate.h"

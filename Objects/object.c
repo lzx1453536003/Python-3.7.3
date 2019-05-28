@@ -1732,6 +1732,7 @@ PyObject _Py_NotImplementedStruct = {
     1, &_PyNotImplemented_Type
 };
 
+//_Py_ReadyTypes 函数完成了所有内置类型对象初始化工作。只有准备好了这些类型(Type) 对 象，我们才能创建对象实例(instance)。
 void
 _Py_ReadyTypes(void)
 {

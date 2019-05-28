@@ -1,4 +1,4 @@
-/* Python interpreter top-level routines, including init/exit */
+﻿/* Python interpreter top-level routines, including init/exit */
 
 #include "Python.h"
 
@@ -704,7 +704,8 @@ _Py_InitializeCore_impl(PyInterpreterState **interp_p,
     if (_Py_INIT_FAILED(err)) {
         return err;
     }
-
+	//// 解释器状态对象 
+	//PyInterpreterState 可以看成 Python 虚拟机进程的全局状态存储器。你所熟悉的 __builtin__、 sys.modules 内容的实际存储位置就是它了
     interp = PyInterpreterState_New();
     if (interp == NULL) {
         return _Py_INIT_ERR("can't make main interpreter");
@@ -714,11 +715,14 @@ _Py_InitializeCore_impl(PyInterpreterState **interp_p,
     if (_PyCoreConfig_Copy(&interp->core_config, core_config) < 0) {
         return _Py_INIT_ERR("failed to copy core config");
     }
-
+	// 线程状态对象
+	//而 PyThreadState 则存储了线程相关的状态，其中重要的就是 StackFrame 和 TraceBack 了。
     PyThreadState *tstate = PyThreadState_New(interp);
     if (tstate == NULL)
         return _Py_INIT_ERR("can't make first thread");
     (void) PyThreadState_Swap(tstate);
+	//通过 PyInterpreterState 和 PyThreadState，Python 虚拟机完成了对 Process、Thread 的初始 化，并建立了相关的状态联系，这是代码执行所必需的。
+
 
     /* We can't call _PyEval_FiniThreads() in Py_FinalizeEx because
        destroying the GIL might fail when it is being referenced from
@@ -733,6 +737,7 @@ _Py_InitializeCore_impl(PyInterpreterState **interp_p,
     /* Create the GIL */
     PyEval_InitThreads();
 
+	//_Py_ReadyTypes 函数完成了所有内置类型对象初始化工作。只有准备好了这些类型 (Type) 对 象，我们才能创建对象实例 (instance)。 
     _Py_ReadyTypes();
 
     if (!_PyFrame_Init())

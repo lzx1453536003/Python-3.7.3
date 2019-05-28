@@ -1,4 +1,4 @@
-/* Definitions for bytecode */
+﻿/* Definitions for bytecode */
 
 #ifndef Py_LIMITED_API
 #ifndef Py_CODE_H
@@ -17,30 +17,33 @@ typedef uint16_t _Py_CODEUNIT;
 #  define _Py_OPARG(word) ((word) >> 8)
 #endif
 
+//Python中确定Code Block的规则：当进入一个新的名字空间或作用域时，就算进入了一个新的Code Block了。
+//即：一个名字空间对应一个Code Block，它会对应一个PyCodeObject。
 /* Bytecode object */
 typedef struct {
     PyObject_HEAD
-    int co_argcount;            /* #arguments, except *args */
-    int co_kwonlyargcount;      /* #keyword only arguments */
-    int co_nlocals;             /* #local variables */
-    int co_stacksize;           /* #entries needed for evaluation stack */
-    int co_flags;               /* CO_..., see below */
-    int co_firstlineno;         /* first source line number */
-    PyObject *co_code;          /* instruction opcodes */
-    PyObject *co_consts;        /* list (constants used) */
-    PyObject *co_names;         /* list of strings (names used) */
-    PyObject *co_varnames;      /* tuple of strings (local variable names) */
-    PyObject *co_freevars;      /* tuple of strings (free variable names) */
-    PyObject *co_cellvars;      /* tuple of strings (cell variable names) */
+    int co_argcount;            /* #arguments, except *args */				//Code Block 位置参数的个数,比如说一个函数的参数
+    int co_kwonlyargcount;      /* #keyword only arguments */				//在函数参数列表中，出现在*varargs之后的命名参数只能使用关键参数的形式调用。
+																			//CodeBlock中的关键参数的个数，即在调用时是出现在可变参数（*varargs）之后的参数个数，可变参数之后的参数均是形式为“keyvalue”的关键参数。
+    int co_nlocals;             /* #local variables */						//局部变量的个数
+    int co_stacksize;           /* #entries needed for evaluation stack */	//执行该段code block需要的栈空间
+    int co_flags;               /* CO_..., see below */						//N/A
+    int co_firstlineno;         /* first source line number */				//对应.py文件的起始行
+    PyObject *co_code;          /* instruction opcodes */					//code block编译所得的字节码，以PyBytesObject形式存在
+    PyObject *co_consts;        /* list (constants used) */					//PyTupleObject, 保存Code Block中的所有常量
+    PyObject *co_names;         /* list of strings (names used) */			//	PyTupleObject, 保存Code Block中所有符号
+    PyObject *co_varnames;      /* tuple of strings (local variable names) */ //局部变量名集合
+    PyObject *co_freevars;      /* tuple of strings (free variable names) */ //	实现闭包时用到的
+    PyObject *co_cellvars;      /* tuple of strings (cell variable names) */ //	嵌套函数所引用的局部变量集合
     /* The rest aren't used in either hash or comparisons, except for co_name,
        used in both. This is done to preserve the name and line number
        for tracebacks and debuggers; otherwise, constant de-duplication
        would collapse identical functions/lambdas defined on different lines.
     */
     Py_ssize_t *co_cell2arg;    /* Maps cell vars which are arguments. */
-    PyObject *co_filename;      /* unicode (where it was loaded from) */
-    PyObject *co_name;          /* unicode (name, for reference) */
-    PyObject *co_lnotab;        /* string (encoding addr<->lineno mapping) See
+    PyObject *co_filename;      /* unicode (where it was loaded from) */	//Code Block 所对应的.py 文件的完整路径 
+    PyObject *co_name;          /* unicode (name, for reference) */			//Code Block 的名字，通常是函数名或类名 
+    PyObject *co_lnotab;        /* string (encoding addr<->lineno mapping) See	//字节码指令byte code与.py行号对应关系，以PyBytesObject形式存在
                                    Objects/lnotab_notes.txt for details. */
     void *co_zombieframe;       /* for optimization only (see frameobject.c) */
     PyObject *co_weakreflist;   /* to support weakrefs to code objects */

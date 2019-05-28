@@ -1,4 +1,4 @@
-/* Python interpreter main program */
+﻿/* Python interpreter main program */
 
 #include "Python.h"
 #include "osdefs.h"

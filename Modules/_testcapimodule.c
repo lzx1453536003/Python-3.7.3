@@ -1,4 +1,4 @@
-/*
+﻿/*
  * C Extension module to test Python interpreter C APIs.
  *
  * The 'test_*' functions exported by this module are run as part of the

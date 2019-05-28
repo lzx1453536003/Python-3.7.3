@@ -14,7 +14,7 @@
 class int "PyObject *" "&PyLong_Type"
 [clinic start generated code]*/
 /*[clinic end generated code: output=da39a3ee5e6b4b0d input=ec0275e3422a36e3]*/
-
+//[-5, 257)
 #ifndef NSMALLPOSINTS
 #define NSMALLPOSINTS           257
 #endif
@@ -31,8 +31,8 @@ _Py_IDENTIFIER(big);
              (Py_SIZE(x) == 0 ? (sdigit)0 :                             \
               (sdigit)(x)->ob_digit[0]))
 
-PyObject *_PyLong_Zero = NULL;
-PyObject *_PyLong_One = NULL;
+PyObject *_PyLong_Zero = NULL;  //0
+PyObject *_PyLong_One = NULL;	//1
 
 #pragma region 小对象池
 #if NSMALLNEGINTS + NSMALLPOSINTS > 0
@@ -41,7 +41,7 @@ PyObject *_PyLong_One = NULL;
    The integers that are preallocated are those in the range
    -NSMALLNEGINTS (inclusive) to NSMALLPOSINTS (not inclusive).
 */
-static PyLongObject small_ints[NSMALLNEGINTS + NSMALLPOSINTS]; //小整数对象池，
+static PyLongObject small_ints[NSMALLNEGINTS + NSMALLPOSINTS]; //小整数对象池，[-5, 257)
 #ifdef COUNT_ALLOCS
 Py_ssize_t quick_int_allocs, quick_neg_int_allocs;
 #endif
@@ -1476,6 +1476,8 @@ PyLong_AsLongLongAndOverflow(PyObject *vv, int *overflow)
             Py_RETURN_NOTIMPLEMENTED;                   \
     } while(0)
 
+#pragma region StaticMethod 
+
 /* x[0:m] and y[0:n] are digit vectors, LSD first, m >= n required.  x[0:n]
  * is modified in place, by adding y to it.  Carries are propagated as far as
  * x[m-1], and the remaining carry (0 or 1) is returned.
@@ -1606,10 +1608,12 @@ divrem1(PyLongObject *a, digit n, digit *prem)
     return long_normalize(z);
 }
 
-/* Convert an integer to a base 10 string.  Returns a new non-shared
+/* Convert an integer to a base 10 string(decimal 十进制).  Returns a new non-shared
    string.  (Return value is non-shared so that callers can modify the
    returned value if necessary.) */
-
+/*
+	将PyObject转化成十进制的字符串
+*/
 static int
 long_to_decimal_string_internal(PyObject *aa,
                                 PyObject **p_output,
@@ -1966,6 +1970,14 @@ long_format_binary(PyObject *aa, int base, int alternate,
     return 0;
 }
 
+#pragma endregion
+
+
+#pragma region 将PyObject format成字符串
+
+/*
+	格式化PyObject为十进制的字符串或者2，4，8进制的字符串
+*/
 PyObject *
 _PyLong_Format(PyObject *obj, int base)
 {
@@ -2012,6 +2024,8 @@ _PyLong_FormatBytesWriter(_PyBytesWriter *writer, char *str,
     assert(str2 != NULL);
     return str2;
 }
+
+#pragma endregion
 
 /* Table of digit values for 8-bit string -> integer conversion.
  * '0' maps to 0, ..., '9' maps to 9.
@@ -2147,7 +2161,7 @@ long_from_binary_base(const char **str, int base, PyLongObject **res)
 PyObject *
 PyLong_FromString(const char *str, char **pend, int base)
 {
-    int sign = 1, error_if_nonzero = 0;
+    int sign = 1, error_if_nonzero = 0; //符号标记
     const char *start, *orig_str = str;
     PyLongObject *z = NULL;
     PyObject *strobj;
@@ -3118,6 +3132,7 @@ long_add(PyLongObject *a, PyLongObject *b)
     CHECK_BINOP(a, b);
 
     if (Py_ABS(Py_SIZE(a)) <= 1 && Py_ABS(Py_SIZE(b)) <= 1) {
+		int e = MEDIUM_VALUE(a) + MEDIUM_VALUE(b);
         return PyLong_FromLong(MEDIUM_VALUE(a) + MEDIUM_VALUE(b));
     }
     if (Py_SIZE(a) < 0) {

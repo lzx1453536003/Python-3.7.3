@@ -1,4 +1,4 @@
-/* Module definition and import implementation */
+﻿/* Module definition and import implementation */
 
 #include "Python.h"
 

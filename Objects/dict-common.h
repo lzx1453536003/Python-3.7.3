@@ -1,4 +1,4 @@
-#ifndef Py_DICT_COMMON_H
+﻿#ifndef Py_DICT_COMMON_H
 #define Py_DICT_COMMON_H
 
 typedef struct {
