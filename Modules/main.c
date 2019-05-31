@@ -55,7 +55,6 @@ extern "C" {
             pymain->err = _Py_INIT_NO_MEMORY(); \
         } \
     } while (0)
-
 #ifdef MS_WINDOWS
 #define WCSTOK wcstok_s
 #else
@@ -81,6 +80,15 @@ static const char usage_line[] =
 "usage: %ls [option] ... [-c cmd | -m mod | file | -] [arg] ...\n";
 
 /* Long usage message, split into parts < 512 bytes */
+/*
+	-b: 在将 bytes 或 bytearray 与 str 或是将 bytes 与 int 比较时发出警告。 如果重复给出该选项 (-bb) 则会引发错误。
+	-B: python -B ,,, import file的时候不生成pyc文件 也可以使用 PYTHONDONTWRITEBYTECODE
+	-c cmd	执行 command 中的 Python 代码。 command 可以为一条或以换行符分隔的多条语句，其中前导空格像在普通模块代码中一样具有作用。
+			如果给出此选项，sys.argv 的首个元素将为 "-c" 并且当前目录将被加入 sys.path 的开头（以允许该目录中的模块作为最高层级模块被导入）。
+	-d 开启解析器调试输出（限专家使用，依赖于编译选项）。 另请参阅 PYTHONDEBUG
+	-E 忽略所有 PYTHON* 环境变量，例如可能已设置的 PYTHONPATH 和 PYTHONHOME。
+	-h 打印帮助信息并且退出 也可以是使用 --help -H
+*/
 static const char usage_1[] = "\
 Options and arguments (and corresponding environment variables):\n\
 -b     : issue warnings about str(bytes_instance), str(bytearray_instance)\n\
@@ -91,6 +99,18 @@ Options and arguments (and corresponding environment variables):\n\
 -E     : ignore PYTHON* environment variables (such as PYTHONPATH)\n\
 -h     : print this help message and exit (also --help)\n\
 ";
+/*
+	-i:	当有脚本被作为首个参数传入或使用了 -c 选项时，在执行脚本或命令之后进入交互模式，即使是在 sys.stdin 并不是一个终端的时候。 PYTHONSTARTUP 文件不会被读取。
+		这一选项的用处是在脚本引发异常时检查全局变量或者栈跟踪。 另请参阅 PYTHONINSPECT。
+	-I:	在隔离模式下运行 Python。 这将同时应用 -E 和 -s。 在隔离模式下 sys.path 既不包含脚本所在目录也不包含用户的 site-packages 目录。 所有 PYTHON* 环境变量也会被忽略。 还可以施加更进一步的限制以防止用户注入恶意代码。
+		3.4	新版功能.
+	-m mod: 在 sys.path 中搜索指定名称的模块并将其内容作为 __main__ 模块来执行。
+	-O:	移除 assert 语句以及任何以 __debug__ 的值作为条件的代码。 通过在 .pyc 扩展名之前添加 .opt-1 来扩充已编译文件 (bytecode) 的文件名 (参见 PEP 488)。 另请参阅 PYTHONOPTIMIZE。
+	-OO:	在启用 -O 的同时丢弃文档字符串。 通过在 .pyc 扩展名之前添加 .opt-2 来扩展已编译文件 (bytecode) 的文件名 (参见 PEP 488)。
+	-q:	即使在交互模式下也不显示版权和版本信息。3.2 新版功能.
+	-s:	不要将 用户 site-packages 目录 添加到 sys.path。
+	-S:	禁用 site 的导入及其所附带的基于站点对 sys.path 的操作。 如果 site 会在稍后被显式地导入也会禁用这些操作 (如果你希望触发它们则应调用 site.main())。
+*/
 static const char usage_2[] = "\
 -i     : inspect interactively after running script; forces a prompt even\n\
          if stdin does not appear to be a terminal; also PYTHONINSPECT=x\n\
@@ -104,6 +124,11 @@ static const char usage_2[] = "\
 -s     : don't add user site directory to sys.path; also PYTHONNOUSERSITE\n\
 -S     : don't imply 'import site' on initialization\n\
 ";
+/*
+	-u:	强制 stdout 和 stderr 流不使用缓冲。 此选项对 stdin 流无影响。在 3.7 版更改: stdout 和 stderr 流在文本层现在不使用缓冲。
+	-v:	每当一个模块被初始化时打印一条信息，显示其加载位置（文件名或内置模块）。 当重复给出时 (-vv)，为搜索模块时所检查的每个文件都打印一条消息。 此外还提供退出时有关模块清理的信息A。 另请参阅 PYTHONVERBOSE。
+	-V:	打印python版本 （--version）		
+*/
 static const char usage_3[] = "\
 -u     : force the stdout and stderr streams to be unbuffered;\n\
          this option has no effect on stdin; also PYTHONUNBUFFERED=x\n\
@@ -250,6 +275,7 @@ pymain_run_startup(PyCompilerFlags *cf)
     fclose(fp);
 }
 
+// 交互模式下
 static void
 pymain_run_interactive_hook(void)
 {
@@ -281,7 +307,7 @@ error:
     PyErr_Clear();
 }
 
-
+// -m import
 static int
 pymain_run_module(const wchar_t *modname, int set_argv0)
 {
@@ -364,7 +390,7 @@ error:
     return NULL;
 }
 
-
+// -c "command"
 static int
 pymain_run_command(wchar_t *command, PyCompilerFlags *cf)
 {
@@ -392,7 +418,7 @@ error:
     return 1;
 }
 
-
+// 运行文件
 static int
 pymain_run_file(FILE *fp, const wchar_t *filename, PyCompilerFlags *p_cf)
 {
@@ -524,7 +550,7 @@ pymain_init_cmdline_argv(_PyMain *pymain, _PyCoreConfig *config,
     assert(cmdline->argv == NULL);
 
     if (pymain->use_bytes_argv) {
-        /* +1 for a the NULL terminator */
+        /* +1 for a the NULL terminator/终止符 */
         size_t size = sizeof(wchar_t*) * (pymain->argc + 1);
         wchar_t** argv = (wchar_t **)PyMem_RawMalloc(size);
         if (argv == NULL) {
@@ -3007,7 +3033,7 @@ pymain_init(_PyMain *pymain)
 
     pymain_init_stdio(pymain);
 
-    PyInterpreterState *interp;
+    PyInterpreterState *interp;	//解释程序状态
     pymain->err = _Py_InitializeCore(&interp, config);
     if (_Py_INIT_FAILED(pymain->err)) {
         _Py_FatalInitError(pymain->err);
@@ -3059,6 +3085,7 @@ Py_Main(int argc, wchar_t **argv)
     pymain.wchar_argv = argv;
 
     return pymain_main(&pymain);
+	return 0;
 }
 
 

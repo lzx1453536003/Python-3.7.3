@@ -16,16 +16,16 @@ typedef struct {
 
 typedef struct _frame {
     PyObject_VAR_HEAD
-    struct _frame *f_back;      /* previous frame, or NULL */
-    PyCodeObject *f_code;       /* code segment */
-    PyObject *f_builtins;       /* builtin symbol table (PyDictObject) */
-    PyObject *f_globals;        /* global symbol table (PyDictObject) */
-    PyObject *f_locals;         /* local symbol table (any mapping) */
-    PyObject **f_valuestack;    /* points after the last local */
+    struct _frame *f_back;      /* previous frame, or NULL */ //调用者帧
+    PyCodeObject *f_code;       /* code segment */ //帧对应的字节码对象
+    PyObject *f_builtins;       /* builtin symbol table (PyDictObject) */	//内置名字空间
+    PyObject *f_globals;        /* global symbol table (PyDictObject) */	//全局名字空间
+    PyObject *f_locals;         /* local symbol table (any mapping) */ //本地名字空间
+    PyObject **f_valuestack;    /* points after the last local */ //运行时栈底
     /* Next free slot in f_valuestack.  Frame creation sets to f_valuestack.
        Frame evaluation usually NULLs it, but a frame that yields sets it
        to the current stack top. */
-    PyObject **f_stacktop;
+    PyObject **f_stacktop; //运行时栈顶
     PyObject *f_trace;          /* Trace function */
     char f_trace_lines;         /* Emit per-line trace events? */
     char f_trace_opcodes;       /* Emit per-opcode trace events? */
