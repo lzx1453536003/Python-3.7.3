@@ -1561,7 +1561,7 @@ pymain_import_readline(_PyMain *pymain)
     if (!Py_InspectFlag && RUN_CODE(pymain)) {
         return;
     }
-    if (!isatty(fileno(stdin))) {
+    if (!isatty(fileno(stdin))) {   //fileno() 取得stdin的文件描述符，isatty() 主要功能是检查设备类型 , 判断文件描述词是否是为终端机
         return;
     }
 

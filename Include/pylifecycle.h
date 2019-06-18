@@ -1,4 +1,4 @@
-
+﻿
 /* Interfaces to configure, query, create & destroy the Python runtime */
 
 #ifndef Py_PYLIFECYCLE_H

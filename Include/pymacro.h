@@ -1,4 +1,4 @@
-#ifndef Py_PYMACRO_H
+﻿#ifndef Py_PYMACRO_H
 #define Py_PYMACRO_H
 
 /* Minimum value between x and y */

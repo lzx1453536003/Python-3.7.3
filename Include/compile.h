@@ -1,4 +1,4 @@
-#ifndef Py_COMPILE_H
+﻿#ifndef Py_COMPILE_H
 #define Py_COMPILE_H
 
 #ifndef Py_LIMITED_API

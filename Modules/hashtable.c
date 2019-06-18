@@ -1,4 +1,4 @@
-/* The implementation of the hash table (_Py_hashtable_t) is based on the
+﻿/* The implementation of the hash table (_Py_hashtable_t) is based on the
    cfuhash project:
    http://sourceforge.net/projects/libcfu/
 

@@ -1,4 +1,4 @@
-
+﻿
 /* Parser-tokenizer link implementation */
 
 #include "pgenheaders.h"

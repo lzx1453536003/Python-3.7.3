@@ -1,4 +1,4 @@
-#ifndef Py_TOKENIZER_H
+﻿#ifndef Py_TOKENIZER_H
 #define Py_TOKENIZER_H
 #ifdef __cplusplus
 extern "C" {
@@ -6,7 +6,7 @@ extern "C" {
 
 #include "object.h"
 
-/* Tokenizer interface */
+/* Tokenizer interface 分词器*/
 
 #include "token.h"      /* For token types */
 

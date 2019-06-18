@@ -1,5 +1,5 @@
-/* Minimal main program -- everything is loaded from the library */
-
+﻿/* Minimal main program -- everything is loaded from the library */
+#include<stdlib.h>
 #include "Python.h"
 
 #ifdef MS_WINDOWS

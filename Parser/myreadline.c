@@ -1,4 +1,4 @@
-
+﻿
 /* Readline interface for tokenizer.c and [raw_]input() in bltinmodule.c.
    By default, or when stdin is not a tty device, we have a super
    simple my_readline function using fgets.
